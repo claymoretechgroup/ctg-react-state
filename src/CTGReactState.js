@@ -13,7 +13,7 @@ export default class CTGReactState {
         this._shared = { ...shared };
         this._states = { ...states };
         this._middleware = [];
-        this._mutators = {};
+        this._mutators = Object.create(null);
         this._join = config.join !== undefined ? config.join : ".";
         this._strict = config.strict !== undefined ? config.strict : false;
 
