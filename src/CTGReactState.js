@@ -47,9 +47,11 @@ export default class CTGReactState {
     // Single key: returns shared[id]. Array: returns values or applies derivation fn.
     get(id, fn) {
         if (Array.isArray(id)) {
+            for (const key of id) CTGReactState._validateKey(key);
             const values = id.map((key) => this._shared[key]);
             return fn ? fn(...values) : values;
         }
+        CTGReactState._validateKey(id);
         return this._shared[id];
     }
 
@@ -110,6 +112,7 @@ export default class CTGReactState {
     // :: STRING -> this
     // Removes bound setter. Value persists in shared.
     unregister(id) {
+        CTGReactState._validateKey(id);
         delete this._states[id];
         return this;
     }
@@ -122,6 +125,8 @@ export default class CTGReactState {
 
     // :: OBJECT -> PROMISE(this)
     // Transactional: if any set fails, rolls back to pre-import state.
+    // NOTE: Bypasses strict mode intentionally — import is a structured
+    // coordinated operation, not an ad-hoc write.
     async import(snapshot) {
         const backup = this.export();
         const keysApplied = [];
@@ -184,6 +189,8 @@ export default class CTGReactState {
 
     // :: STRING, OBJECT -> PROMISE(this)
     // Sets each key with namespace prefix prepended.
+    // NOTE: Bypasses strict mode intentionally — setNamespace is a structured
+    // coordinated operation, not an ad-hoc write.
     async setNamespace(prefix, values) {
         for (const [key, val] of Object.entries(values)) {
             await this._setSingle(prefix + this._join + key, val);

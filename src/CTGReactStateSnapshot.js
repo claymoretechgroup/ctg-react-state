@@ -18,8 +18,8 @@ export default class CTGReactStateSnapshot {
         this._restoring = false;
 
         if (this._auto) {
-            this._state.use((id, val, prev) => {
-                if (!this._restoring) this.save();
+            this._state.use(async (id, val, prev) => {
+                if (!this._restoring) await this.save();
                 return val;
             });
         }
@@ -127,7 +127,9 @@ export default class CTGReactStateSnapshot {
     // Removes all snapshots and resets cursor.
     async clear() {
         if (this._storage) {
-            for (const key of [...this._order]) {
+            // Query backend for all keys, not just _order, to catch pre-existing/persisted keys
+            const allKeys = await this._storage.list();
+            for (const key of allKeys) {
                 await this._storage.remove(key);
             }
         }
