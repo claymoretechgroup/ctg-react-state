@@ -6,10 +6,14 @@ const CTGReactStateContext = createContext(null);
 
 // :: { state?, children, config? } -> JSX
 // Provider component that creates a CTGReactState instance and provides via context.
+// NOTE: The CTGReactState instance is created once on mount. Subsequent changes to
+// the state or config props are intentionally ignored — the instance is stable for
+// the lifetime of the provider. To update state after mount, use the instance's
+// set()/import() methods directly.
 export function CTGReactStateProvider({ state, children, config }) {
     const instance = useMemo(
         () => CTGReactState.init(state || {}, {}, config || {}),
-        [] // Created once on mount
+        [] // Created once on mount — prop changes after mount are ignored
     );
 
     return React.createElement(CTGReactStateContext.Provider, { value: instance }, children);

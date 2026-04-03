@@ -38,7 +38,8 @@ export default class CTGReactStateSnapshot {
         const data = this._state.export();
 
         if (this._storage) {
-            await this._storage.save(snapKey, data);
+            try { await this._storage.save(snapKey, data); }
+            catch (err) { throw new CTGReactStateError("SNAPSHOT_ERROR", `Storage save failed: ${err.message}`, { originalError: err }); }
         } else {
             this._snapshots[snapKey] = data;
         }
@@ -52,7 +53,8 @@ export default class CTGReactStateSnapshot {
         if (this._maxHistory && this._order.length > this._maxHistory) {
             const removed = this._order.shift();
             if (this._storage) {
-                await this._storage.remove(removed);
+                try { await this._storage.remove(removed); }
+                catch (err) { throw new CTGReactStateError("SNAPSHOT_ERROR", `Storage remove failed: ${err.message}`, { originalError: err }); }
             } else {
                 delete this._snapshots[removed];
             }
@@ -67,7 +69,8 @@ export default class CTGReactStateSnapshot {
     async restore(key) {
         let data;
         if (this._storage) {
-            data = await this._storage.load(key);
+            try { data = await this._storage.load(key); }
+            catch (err) { throw new CTGReactStateError("SNAPSHOT_ERROR", `Storage load failed: ${err.message}`, { originalError: err }); }
         } else {
             data = this._snapshots[key];
         }
@@ -96,7 +99,8 @@ export default class CTGReactStateSnapshot {
     // Returns snapshot keys in insertion order.
     async list() {
         if (this._storage) {
-            return await this._storage.list();
+            try { return await this._storage.list(); }
+            catch (err) { throw new CTGReactStateError("SNAPSHOT_ERROR", `Storage list failed: ${err.message}`, { originalError: err }); }
         }
         return [...this._order];
     }
@@ -132,10 +136,13 @@ export default class CTGReactStateSnapshot {
     // Removes all snapshots and resets cursor.
     async clear() {
         if (this._storage) {
-            // Query backend for all keys, not just _order, to catch pre-existing/persisted keys
-            const allKeys = await this._storage.list();
-            for (const key of allKeys) {
-                await this._storage.remove(key);
+            try {
+                const allKeys = await this._storage.list();
+                for (const key of allKeys) {
+                    await this._storage.remove(key);
+                }
+            } catch (err) {
+                throw new CTGReactStateError("SNAPSHOT_ERROR", `Storage clear failed: ${err.message}`, { originalError: err });
             }
         }
         this._snapshots = {};

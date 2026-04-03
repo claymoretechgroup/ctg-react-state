@@ -343,8 +343,16 @@ static init(shared, states, config)
   the async pipeline entirely for zero overhead in the common case.
 - **Shallow copy on export** — `export()` returns `{ ...this._shared }`. Deep
   cloning is the caller's responsibility if shared values contain nested objects.
-- **Import goes through set** — `import()` calls `set()` for each key, so
-  middleware and bound setters fire. This is intentional per the requirements doc.
+- **Import goes through the write pipeline** — `import()` writes each key through
+  the middleware pipeline and fires bound setters, matching the spec's "same path
+  as any other state mutation" contract for middleware. However, `import()` and
+  `setNamespace()` intentionally bypass strict-mode gating — they are structured
+  coordinated operations, not ad-hoc writes. In strict mode, only raw `set()`
+  calls are blocked; `import()`, `setNamespace()`, and `mutate()` are allowed.
+- **Mutator isolation** — mutators receive a frozen shallow copy of `_shared`,
+  not the live reference. In-place mutation of the shared object inside a mutator
+  function throws a TypeError. All state changes must be returned as an update
+  object from the mutator.
 
 ---
 

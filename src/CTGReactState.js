@@ -217,7 +217,8 @@ export default class CTGReactState {
         if (!fn) {
             throw new CTGReactStateError("UNKNOWN_MUTATOR", `Unknown mutator: ${name}`);
         }
-        const updates = fn(this._shared, payload);
+        // Pass a frozen shallow copy to prevent in-place mutation of _shared
+        const updates = fn(Object.freeze({ ...this._shared }), payload);
         for (const [key, val] of Object.entries(updates)) {
             await this._setBypassStrict(key, val);
         }
