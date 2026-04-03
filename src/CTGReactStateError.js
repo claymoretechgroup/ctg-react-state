@@ -9,6 +9,7 @@ export default class CTGReactStateError extends Error {
         STRICT_VIOLATION:    1001,
         UNKNOWN_MUTATOR:     1002,
         MIDDLEWARE_ERROR:     1003,
+        INVALID_MUTATOR:     1004,
         // 2xxx — Snapshot operations
         SNAPSHOT_NOT_FOUND:  2000,
         SNAPSHOT_ERROR:      2001,

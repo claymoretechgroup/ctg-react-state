@@ -207,7 +207,7 @@ export default class CTGReactState {
     // Registers a named mutator function.
     mutator(name, fn) {
         if (typeof fn !== "function") {
-            throw new CTGReactStateError("UNKNOWN_MUTATOR", `Mutator fn must be a function, got ${typeof fn}`);
+            throw new CTGReactStateError("INVALID_MUTATOR", `Mutator fn must be a function, got ${typeof fn}`);
         }
         this._mutators[name] = fn;
         return this;
@@ -225,7 +225,7 @@ export default class CTGReactState {
         const updates = await fn(frozenCopy, payload);
         // Validate mutator return shape
         if (updates === null || updates === undefined || typeof updates !== "object" || Array.isArray(updates)) {
-            throw new CTGReactStateError("UNKNOWN_MUTATOR",
+            throw new CTGReactStateError("INVALID_MUTATOR",
                 `Mutator '${name}' must return a plain object, got ${Array.isArray(updates) ? "array" : typeof updates}`);
         }
         for (const [key, val] of Object.entries(updates)) {
@@ -283,6 +283,10 @@ export default class CTGReactState {
     // :: *, WeakSet? -> *
     // Recursively clones an object/array with cycle detection.
     // Cyclic references are replaced with null to prevent stack overflow.
+    // NOTE: This is intentionally lossy — shared references that appear
+    // multiple times in the object graph are cloned independently on first
+    // visit, then become null on subsequent visits. Mutators should not
+    // rely on reference identity between values in the frozen copy.
     static _deepClone(value, seen) {
         if (value === null || typeof value !== "object") return value;
         if (!seen) seen = new WeakSet();
