@@ -206,6 +206,9 @@ export default class CTGReactState {
     // :: STRING, (OBJECT -> OBJECT) -> this
     // Registers a named mutator function.
     mutator(name, fn) {
+        if (typeof fn !== "function") {
+            throw new CTGReactStateError("UNKNOWN_MUTATOR", `Mutator fn must be a function, got ${typeof fn}`);
+        }
         this._mutators[name] = fn;
         return this;
     }
@@ -219,7 +222,7 @@ export default class CTGReactState {
         }
         // Deep clone then freeze to prevent mutation without affecting live state
         const frozenCopy = CTGReactState._deepFreeze(CTGReactState._deepClone(this._shared));
-        const updates = fn(frozenCopy, payload);
+        const updates = await fn(frozenCopy, payload);
         // Validate mutator return shape
         if (updates === null || updates === undefined || typeof updates !== "object" || Array.isArray(updates)) {
             throw new CTGReactStateError("UNKNOWN_MUTATOR",
@@ -277,15 +280,18 @@ export default class CTGReactState {
      *
      */
 
-    // :: * -> *
-    // Recursively clones an object/array. Handles primitives, plain objects, arrays.
-    // Does not handle class instances, Maps, Sets, etc. — sufficient for shared state.
-    static _deepClone(value) {
+    // :: *, WeakSet? -> *
+    // Recursively clones an object/array with cycle detection.
+    // Cyclic references are replaced with null to prevent stack overflow.
+    static _deepClone(value, seen) {
         if (value === null || typeof value !== "object") return value;
-        if (Array.isArray(value)) return value.map((item) => CTGReactState._deepClone(item));
+        if (!seen) seen = new WeakSet();
+        if (seen.has(value)) return null; // break cycle
+        seen.add(value);
+        if (Array.isArray(value)) return value.map((item) => CTGReactState._deepClone(item, seen));
         const clone = {};
         for (const [key, val] of Object.entries(value)) {
-            clone[key] = CTGReactState._deepClone(val);
+            clone[key] = CTGReactState._deepClone(val, seen);
         }
         return clone;
     }
