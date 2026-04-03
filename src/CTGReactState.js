@@ -206,6 +206,7 @@ export default class CTGReactState {
     // :: STRING, (OBJECT -> OBJECT) -> this
     // Registers a named mutator function.
     mutator(name, fn) {
+        CTGReactState._validateKey(name);
         if (typeof fn !== "function") {
             throw new CTGReactStateError("INVALID_MUTATOR", `Mutator fn must be a function, got ${typeof fn}`);
         }
