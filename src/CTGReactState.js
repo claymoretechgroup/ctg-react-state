@@ -217,8 +217,14 @@ export default class CTGReactState {
         if (!fn) {
             throw new CTGReactStateError("UNKNOWN_MUTATOR", `Unknown mutator: ${name}`);
         }
-        // Pass a frozen shallow copy to prevent in-place mutation of _shared
-        const updates = fn(Object.freeze({ ...this._shared }), payload);
+        // Deep freeze a copy to prevent any in-place mutation of shared state
+        const frozenCopy = CTGReactState._deepFreeze({ ...this._shared });
+        const updates = fn(frozenCopy, payload);
+        // Validate mutator return shape
+        if (updates === null || updates === undefined || typeof updates !== "object" || Array.isArray(updates)) {
+            throw new CTGReactStateError("INVALID_KEY",
+                `Mutator '${name}' must return a plain object, got ${Array.isArray(updates) ? "array" : typeof updates}`);
+        }
         for (const [key, val] of Object.entries(updates)) {
             await this._setBypassStrict(key, val);
         }
@@ -270,6 +276,18 @@ export default class CTGReactState {
      * Static Methods
      *
      */
+
+    // :: OBJECT -> OBJECT
+    // Recursively freezes an object and all nested objects/arrays.
+    static _deepFreeze(obj) {
+        Object.freeze(obj);
+        for (const value of Object.values(obj)) {
+            if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
+                CTGReactState._deepFreeze(value);
+            }
+        }
+        return obj;
+    }
 
     // Static Factory Method :: OBJECT?, OBJECT?, OBJECT? -> ctgReactState
     static init(shared, states, config) {
