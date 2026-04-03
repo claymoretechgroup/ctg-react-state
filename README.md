@@ -15,7 +15,7 @@
 ## Install
 
 ```
-npm install ctg-react-state
+npm install github:claymoretechgroup/ctg-react-state
 ```
 
 Peer dependency: `react >= 18.0.0` (optional — core works standalone).
