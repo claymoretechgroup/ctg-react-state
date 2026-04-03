@@ -124,9 +124,12 @@ export default class CTGReactState {
     }
 
     // :: OBJECT -> PROMISE(this)
-    // Transactional: if any set fails, rolls back to pre-import state.
-    // NOTE: Bypasses strict mode intentionally — import is a structured
-    // coordinated operation, not an ad-hoc write.
+    // Transactional: if any key's write fails, rolls back to pre-import state.
+    // Uses _setSingle() directly (not set()) — this means import bypasses
+    // strict mode intentionally. Import is a structured coordinated operation
+    // that writes each key through the middleware pipeline and fires bound
+    // setters, matching the spec's "goes through the same path as any other
+    // state mutation" contract for middleware, but not for strict-mode gating.
     async import(snapshot) {
         const backup = this.export();
         const keysApplied = [];
@@ -193,6 +196,8 @@ export default class CTGReactState {
     // coordinated operation, not an ad-hoc write.
     async setNamespace(prefix, values) {
         for (const [key, val] of Object.entries(values)) {
+            // Validate member key independently before prepending prefix
+            CTGReactState._validateKey(key);
             await this._setSingle(prefix + this._join + key, val);
         }
         return this;

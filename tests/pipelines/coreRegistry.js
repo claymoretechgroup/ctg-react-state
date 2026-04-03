@@ -225,13 +225,20 @@ export default async function run({ config }) {
         .assert("no keys added", (v) => v, 0)
         .start(null, config);
 
-    await CTGTest.init("setNamespace: prefixed keys are not reserved (ns.constructor is valid)")
-        .stage("setup", async () => {
-            const s = CTGReactState.init();
-            await s.setNamespace("ns", { "constructor": "value" });
-            return s.get("ns.constructor");
+    await CTGTest.init("setNamespace: rejects constructor as member key")
+        .stage("attempt", async () => {
+            try { await CTGReactState.init().setNamespace("ns", { "constructor": {} }); return "no throw"; }
+            catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
         })
-        .assert("value set", (v) => v, "value")
+        .assert("threw", (r) => r, "threw")
+        .start(null, config);
+
+    await CTGTest.init("setNamespace: rejects prototype as member key")
+        .stage("attempt", async () => {
+            try { await CTGReactState.init().setNamespace("ns", { "prototype": {} }); return "no throw"; }
+            catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
+        })
+        .assert("threw", (r) => r, "threw")
         .start(null, config);
 
     await CTGTest.init("import: transactional rollback on middleware failure")

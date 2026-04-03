@@ -82,8 +82,13 @@ export default class CTGReactStateSnapshot {
         } finally {
             this._restoring = false;
         }
-        const idx = this._order.indexOf(key);
-        if (idx !== -1) this._cursor = idx;
+        let idx = this._order.indexOf(key);
+        if (idx === -1) {
+            // Key exists in storage but not in local order — sync it
+            this._order.push(key);
+            idx = this._order.length - 1;
+        }
+        this._cursor = idx;
         return this;
     }
 
