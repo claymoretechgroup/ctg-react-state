@@ -217,12 +217,12 @@ export default class CTGReactState {
         if (!fn) {
             throw new CTGReactStateError("UNKNOWN_MUTATOR", `Unknown mutator: ${name}`);
         }
-        // Deep freeze a copy to prevent any in-place mutation of shared state
-        const frozenCopy = CTGReactState._deepFreeze({ ...this._shared });
+        // Deep clone then freeze to prevent mutation without affecting live state
+        const frozenCopy = CTGReactState._deepFreeze(CTGReactState._deepClone(this._shared));
         const updates = fn(frozenCopy, payload);
         // Validate mutator return shape
         if (updates === null || updates === undefined || typeof updates !== "object" || Array.isArray(updates)) {
-            throw new CTGReactStateError("INVALID_KEY",
+            throw new CTGReactStateError("UNKNOWN_MUTATOR",
                 `Mutator '${name}' must return a plain object, got ${Array.isArray(updates) ? "array" : typeof updates}`);
         }
         for (const [key, val] of Object.entries(updates)) {
@@ -276,6 +276,19 @@ export default class CTGReactState {
      * Static Methods
      *
      */
+
+    // :: * -> *
+    // Recursively clones an object/array. Handles primitives, plain objects, arrays.
+    // Does not handle class instances, Maps, Sets, etc. — sufficient for shared state.
+    static _deepClone(value) {
+        if (value === null || typeof value !== "object") return value;
+        if (Array.isArray(value)) return value.map((item) => CTGReactState._deepClone(item));
+        const clone = {};
+        for (const [key, val] of Object.entries(value)) {
+            clone[key] = CTGReactState._deepClone(val);
+        }
+        return clone;
+    }
 
     // :: OBJECT -> OBJECT
     // Recursively freezes an object and all nested objects/arrays.
