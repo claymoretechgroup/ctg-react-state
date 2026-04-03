@@ -111,7 +111,7 @@ export default async function run({ config }) {
 
     // ── Writer Component (set on click) ──────────────────────
 
-    await CTGTest.init("Writer: clicking sets value in state")
+    await CTGTest.init("Writer: set via state instance updates shared")
         .stage("execute", async () => {
             let stateRef = null;
             function Probe() { stateRef = useDistroState(); return null; }

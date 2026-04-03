@@ -213,9 +213,25 @@ export default async function run({ config }) {
         .assert("threw", (r) => r, "threw")
         .start(null, config);
 
-    await CTGTest.init("setNamespace: rejects reserved keys in values")
+    await CTGTest.init("setNamespace: rejects __proto__ in values")
         .stage("attempt", async () => {
             try { await CTGReactState.init().setNamespace("ns", { "__proto__": {} }); return "no throw"; }
+            catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
+        })
+        .assert("threw", (r) => r, "threw")
+        .start(null, config);
+
+    await CTGTest.init("setNamespace: rejects constructor in values")
+        .stage("attempt", async () => {
+            try { await CTGReactState.init().setNamespace("ns", { "constructor": {} }); return "no throw"; }
+            catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
+        })
+        .assert("threw", (r) => r, "threw")
+        .start(null, config);
+
+    await CTGTest.init("setNamespace: rejects prototype in values")
+        .stage("attempt", async () => {
+            try { await CTGReactState.init().setNamespace("ns", { "prototype": {} }); return "no throw"; }
             catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
         })
         .assert("threw", (r) => r, "threw")

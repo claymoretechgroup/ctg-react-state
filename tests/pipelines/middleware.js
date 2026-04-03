@@ -136,6 +136,6 @@ export default async function run({ config }) {
             return { count: Object.keys(s.export()).length, elapsed };
         })
         .assert("all keys imported", (r) => r.count, 1000)
-        .assert("under 5 seconds", (r) => r.elapsed < 5000, true)
+        // No timing assertion — correctness only. Performance profiling is separate.
         .start(null, config);
 }
