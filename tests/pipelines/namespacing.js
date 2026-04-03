@@ -1,6 +1,6 @@
 // Namespacing via join operator tests
 
-import CTGTest from "../../../ctg-js-test/src/CTGTest.js";
+import CTGTest from "ctg-js-test";
 import CTGReactState from "../../src/CTGReactState.js";
 
 // :: OBJECT -> PROMISE(VOID)

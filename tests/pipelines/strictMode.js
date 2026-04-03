@@ -1,6 +1,6 @@
 // Strict mode and mutator tests
 
-import CTGTest from "../../../ctg-js-test/src/CTGTest.js";
+import CTGTest from "ctg-js-test";
 import CTGReactState from "../../src/CTGReactState.js";
 import CTGReactStateError from "../../src/CTGReactStateError.js";
 

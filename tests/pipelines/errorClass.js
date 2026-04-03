@@ -1,6 +1,6 @@
 // CTGReactStateError typed error class tests
 
-import CTGTest from "../../../ctg-js-test/src/CTGTest.js";
+import CTGTest from "ctg-js-test";
 import CTGReactStateError from "../../src/CTGReactStateError.js";
 
 // :: OBJECT -> PROMISE(VOID)

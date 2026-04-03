@@ -1,6 +1,6 @@
 // Multi-key get/set and derived operations tests
 
-import CTGTest from "../../../ctg-js-test/src/CTGTest.js";
+import CTGTest from "ctg-js-test";
 import CTGReactState from "../../src/CTGReactState.js";
 
 // :: OBJECT -> PROMISE(VOID)

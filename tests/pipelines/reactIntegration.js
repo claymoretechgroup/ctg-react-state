@@ -2,7 +2,7 @@
 // Requires jsdom globals to be set up before import
 
 import React from "react";
-import CTGTest from "../../../ctg-js-test/src/CTGTest.js";
+import CTGTest from "ctg-js-test";
 import CTGReactState from "../../src/CTGReactState.js";
 import { CTGReactStateProvider, useDistroState, useDistroStateRegistry } from "../../src/CTGReactStateProvider.js";
 import { Counter, Display, Writer, MultiKeyDisplay, NamespaceDisplay, Toggle } from "../components.js";

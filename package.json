@@ -16,6 +16,8 @@
         "react": { "optional": true }
     },
     "devDependencies": {
+        "ctg-js-test": "github:claymoretechgroup/ctg-js-test",
+        "ctg-react-test": "github:claymoretechgroup/ctg-react-test",
         "jsdom": "^24.0.0",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",

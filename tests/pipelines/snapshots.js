@@ -1,6 +1,6 @@
 // CTGReactStateSnapshot tests — save, restore, time-travel, storage, auto-snap
 
-import CTGTest from "../../../ctg-js-test/src/CTGTest.js";
+import CTGTest from "ctg-js-test";
 import CTGReactState from "../../src/CTGReactState.js";
 import CTGReactStateSnapshot from "../../src/CTGReactStateSnapshot.js";
 import CTGReactStateError from "../../src/CTGReactStateError.js";

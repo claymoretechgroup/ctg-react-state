@@ -7,7 +7,7 @@
 // NOTE: React integration tests require jsdom globals.
 // For full coverage: npm test
 
-import CTGTest from "../../ctg-js-test/src/CTGTest.js"; // Test framework
+import CTGTest from "ctg-js-test"; // Test framework
 
 // ── jsdom Setup ──────────────────────────────────────────────
 
