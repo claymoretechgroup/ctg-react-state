@@ -200,6 +200,63 @@ export default async function run({ config }) {
         .assert("value correct", (r) => r.val, 42)
         .start(null, config);
 
+    await CTGTest.init("snapshot: storage.load() used by restore()")
+        .stage("setup", async () => {
+            const store = {};
+            const storage = {
+                async save(key, data) { store[key] = JSON.parse(JSON.stringify(data)); },
+                async load(key) { return store[key] || null; },
+                async list() { return Object.keys(store); },
+                async remove(key) { delete store[key]; }
+            };
+            const s = CTGReactState.init({ x: 1 });
+            const snap = new CTGReactStateSnapshot(s, { storage });
+            await snap.save("s1");
+            await s.set("x", 99);
+            await snap.restore("s1");
+            return s.get("x");
+        })
+        .assert("restored from storage", (v) => v, 1)
+        .start(null, config);
+
+    await CTGTest.init("snapshot: storage.list() returns backend keys")
+        .stage("setup", async () => {
+            const store = {};
+            const storage = {
+                async save(key, data) { store[key] = data; },
+                async load(key) { return store[key] || null; },
+                async list() { return Object.keys(store); },
+                async remove(key) { delete store[key]; }
+            };
+            const snap = new CTGReactStateSnapshot(CTGReactState.init({ a: 1 }), { storage });
+            await snap.save("first");
+            await snap.save("second");
+            return await snap.list();
+        })
+        .assert("two keys", (l) => l.length, 2)
+        .assert("has first", (l) => l.includes("first"), true)
+        .assert("has second", (l) => l.includes("second"), true)
+        .start(null, config);
+
+    await CTGTest.init("snapshot: storage.remove() called by clear()")
+        .stage("setup", async () => {
+            const store = {};
+            const storage = {
+                async save(key, data) { store[key] = data; },
+                async load(key) { return store[key] || null; },
+                async list() { return Object.keys(store); },
+                async remove(key) { delete store[key]; }
+            };
+            const snap = new CTGReactStateSnapshot(CTGReactState.init(), { storage });
+            await snap.save("a");
+            await snap.save("b");
+            await snap.clear();
+            return { storeKeys: Object.keys(store), list: await snap.list() };
+        })
+        .assert("store emptied", (r) => r.storeKeys.length, 0)
+        .assert("list empty", (r) => r.list.length, 0)
+        .start(null, config);
+
     // ── Chainability ─────────────────────────────────────────
 
     await CTGTest.init("snapshot: save/restore/clear are chainable")

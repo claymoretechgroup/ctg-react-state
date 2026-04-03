@@ -189,6 +189,38 @@ export default async function run({ config }) {
         .assert("threw", (r) => r, "threw")
         .start(null, config);
 
+    await CTGTest.init("import: rejects constructor in snapshot")
+        .stage("attempt", async () => {
+            try { await CTGReactState.init().import({ "constructor": {} }); return "no throw"; }
+            catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
+        })
+        .assert("threw", (r) => r, "threw")
+        .start(null, config);
+
+    await CTGTest.init("import: rejects prototype in snapshot")
+        .stage("attempt", async () => {
+            try { await CTGReactState.init().import({ "prototype": {} }); return "no throw"; }
+            catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
+        })
+        .assert("threw", (r) => r, "threw")
+        .start(null, config);
+
+    await CTGTest.init("set(object): rejects reserved keys in multi-key set")
+        .stage("attempt", async () => {
+            try { await CTGReactState.init().set({ "safe": 1, "__proto__": {} }); return "no throw"; }
+            catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
+        })
+        .assert("threw", (r) => r, "threw")
+        .start(null, config);
+
+    await CTGTest.init("setNamespace: rejects reserved keys in values")
+        .stage("attempt", async () => {
+            try { await CTGReactState.init().setNamespace("ns", { "__proto__": {} }); return "no throw"; }
+            catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
+        })
+        .assert("threw", (r) => r, "threw")
+        .start(null, config);
+
     await CTGTest.init("import: transactional rollback on middleware failure")
         .stage("setup", async () => {
             const s = CTGReactState.init({ x: "original" });
@@ -202,5 +234,48 @@ export default async function run({ config }) {
             return s.get("x");
         })
         .assert("x rolled back", (r) => r, "original")
+        .start(null, config);
+
+    await CTGTest.init("import: rollback deletes keys that did not exist before")
+        .stage("setup", async () => {
+            const s = CTGReactState.init({ existing: "keep" });
+            s.use((id, val) => {
+                if (id === "fail") throw new Error("reject");
+                return val;
+            });
+            try {
+                // "newKey" will be applied, then "fail" throws, rollback should delete "newKey"
+                await s.import({ newKey: "added", fail: "boom" });
+            } catch { /* expected */ }
+            const exp = s.export();
+            return {
+                existing: exp.existing,
+                hasNewKey: "newKey" in exp
+            };
+        })
+        .assert("existing preserved", (r) => r.existing, "keep")
+        .assert("new key deleted on rollback", (r) => r.hasNewKey, false)
+        .start(null, config);
+
+    await CTGTest.init("import: rollback fires setters for affected keys")
+        .stage("setup", async () => {
+            const s = CTGReactState.init({ x: "original" });
+            const setterCalls = [];
+            s.register("x", ["original", (v) => setterCalls.push(v)]);
+            s.use((id, val) => {
+                if (id === "y") throw new Error("reject");
+                return val;
+            });
+            try {
+                await s.import({ x: "changed", y: "boom" });
+            } catch { /* expected */ }
+            // Setter should have been called with "changed" then rolled back with "original"
+            return {
+                finalValue: s.get("x"),
+                lastSetterCall: setterCalls[setterCalls.length - 1]
+            };
+        })
+        .assert("value rolled back", (r) => r.finalValue, "original")
+        .assert("setter called with rollback value", (r) => r.lastSetterCall, "original")
         .start(null, config);
 }
