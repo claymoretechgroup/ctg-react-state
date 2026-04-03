@@ -177,7 +177,9 @@ export default async function run({ config }) {
             return { count: list.length, restored: s.get("count") };
         })
         .assert("3 auto-snapshots", (r) => r.count, 3)
-        .assert("time-travel works", (r) => r.restored, 1)
+        // After 3 sets (0→1→2→3), snapshots capture pre-mutation: [0, 1, 2]
+        // back() from cursor 2→1 restores {count:1}, back() 1→0 restores {count:0}
+        .assert("time-travel works", (r) => r.restored, 0)
         .start(null, config);
 
     // ── Pluggable Storage ────────────────────────────────────

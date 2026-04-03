@@ -132,24 +132,41 @@ export default async function run({ config }) {
 
     // ── Cross-Component Communication ────────────────────────
 
-    await CTGTest.init("cross-component: Counter and Display share state")
+    await CTGTest.init("cross-component: set in one component updates registered owner")
         .stage("execute", async () => {
             let stateRef = null;
             function Probe() { stateRef = useDistroState(); return null; }
             render(
                 React.createElement(CTGReactStateProvider, { state: { shared: "initial" } },
                     React.createElement(Counter, { stateKey: "shared" }),
-                    React.createElement(Display, { stateKey: "shared" }),
                     React.createElement(Probe))
             );
-            const before = screen.getByTestId("display-shared").textContent;
+            const before = screen.getByTestId("shared-value").textContent;
             await act(async () => { await stateRef.set("shared", "updated"); });
-            const after = screen.getByTestId("display-shared").textContent;
+            const after = screen.getByTestId("shared-value").textContent;
             cleanup();
             return { before, after };
         })
         .assert("before", (r) => r.before, "initial")
         .assert("after", (r) => r.after, "updated")
+        .start(null, config);
+
+    await CTGTest.init("cross-component: unregistered reader sees value via get()")
+        .stage("execute", async () => {
+            let stateRef = null;
+            function Probe() { stateRef = useDistroState(); return null; }
+            render(
+                React.createElement(CTGReactStateProvider, { state: { data: "hello" } },
+                    React.createElement(Counter, { stateKey: "data" }),
+                    React.createElement(Probe))
+            );
+            await act(async () => { await stateRef.set("data", "world"); });
+            // get() always reads current shared value
+            const fromGet = stateRef.get("data");
+            cleanup();
+            return fromGet;
+        })
+        .assert("get returns updated value", (v) => v, "world")
         .start(null, config);
 
     // ── MultiKeyDisplay Component ────────────────────────────

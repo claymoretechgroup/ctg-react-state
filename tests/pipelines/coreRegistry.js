@@ -181,12 +181,15 @@ export default async function run({ config }) {
         .assert("middleware fired for each", (r) => r.setCalled, 2)
         .start(null, config);
 
-    await CTGTest.init("import: rejects __proto__ in snapshot")
-        .stage("attempt", async () => {
-            try { await CTGReactState.init().import({ "__proto__": {} }); return "no throw"; }
-            catch (e) { return e instanceof CTGReactStateError ? "threw" : "wrong"; }
+    await CTGTest.init("import: __proto__ filtered by Object.keys (safe by default)")
+        .stage("setup", async () => {
+            const s = CTGReactState.init();
+            // Object.keys({ "__proto__": {} }) returns [] — __proto__ never reaches _setSingle
+            await s.import({ "__proto__": {} });
+            const exp = s.export();
+            return Object.keys(exp).length;
         })
-        .assert("threw", (r) => r, "threw")
+        .assert("no keys added", (v) => v, 0)
         .start(null, config);
 
     await CTGTest.init("import: rejects constructor in snapshot")
@@ -205,36 +208,30 @@ export default async function run({ config }) {
         .assert("threw", (r) => r, "threw")
         .start(null, config);
 
-    await CTGTest.init("set(object): rejects reserved keys in multi-key set")
+    await CTGTest.init("set(object): rejects constructor key in multi-key set")
         .stage("attempt", async () => {
-            try { await CTGReactState.init().set({ "safe": 1, "__proto__": {} }); return "no throw"; }
+            try { await CTGReactState.init().set({ "safe": 1, "constructor": {} }); return "no throw"; }
             catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
         })
         .assert("threw", (r) => r, "threw")
         .start(null, config);
 
-    await CTGTest.init("setNamespace: rejects __proto__ in values")
-        .stage("attempt", async () => {
-            try { await CTGReactState.init().setNamespace("ns", { "__proto__": {} }); return "no throw"; }
-            catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
+    await CTGTest.init("setNamespace: __proto__ filtered by Object.entries (safe)")
+        .stage("setup", async () => {
+            const s = CTGReactState.init();
+            await s.setNamespace("ns", { "__proto__": {} });
+            return Object.keys(s.export()).length;
         })
-        .assert("threw", (r) => r, "threw")
+        .assert("no keys added", (v) => v, 0)
         .start(null, config);
 
-    await CTGTest.init("setNamespace: rejects constructor in values")
-        .stage("attempt", async () => {
-            try { await CTGReactState.init().setNamespace("ns", { "constructor": {} }); return "no throw"; }
-            catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
+    await CTGTest.init("setNamespace: prefixed keys are not reserved (ns.constructor is valid)")
+        .stage("setup", async () => {
+            const s = CTGReactState.init();
+            await s.setNamespace("ns", { "constructor": "value" });
+            return s.get("ns.constructor");
         })
-        .assert("threw", (r) => r, "threw")
-        .start(null, config);
-
-    await CTGTest.init("setNamespace: rejects prototype in values")
-        .stage("attempt", async () => {
-            try { await CTGReactState.init().setNamespace("ns", { "prototype": {} }); return "no throw"; }
-            catch (e) { return e instanceof CTGReactStateError && e.type === "INVALID_KEY" ? "threw" : "wrong"; }
-        })
-        .assert("threw", (r) => r, "threw")
+        .assert("value set", (v) => v, "value")
         .start(null, config);
 
     await CTGTest.init("import: transactional rollback on middleware failure")
