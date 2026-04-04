@@ -1,11 +1,13 @@
 // Self-tests for ctg-react-state
 //
 // Composes test pipelines from category modules.
-// Sets up jsdom for React integration tests.
-// Core/snapshot/middleware tests run without React.
+// Sets up jsdom globally — required by React integration tests and
+// used as the DOM environment for all pipelines in the suite.
+// Pure JS tests (core, middleware, snapshots) don't touch the DOM
+// but run in the same process for simplicity.
 //
-// NOTE: React integration tests require jsdom globals.
-// For full coverage: npm test
+// React integration tests use CTGReactTest for DOM-driven assertions
+// and CTGTest for direct API tests that need React as scaffolding.
 
 import CTGTest from "ctg-js-test"; // Test framework
 
