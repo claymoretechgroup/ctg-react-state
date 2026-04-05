@@ -1,15 +1,12 @@
 // Self-tests for ctg-react-state
 //
-// Composes test pipelines from category modules.
-// Sets up jsdom globally — required by React integration tests and
-// used as the DOM environment for all pipelines in the suite.
-// Pure JS tests (core, middleware, snapshots) don't touch the DOM
-// but run in the same process for simplicity.
+// All tests run through React components via CTGReactTest v3.
+// Sets up jsdom globally for DOM environment.
 //
-// React integration tests use CTGReactTest for DOM-driven assertions
-// and CTGTest for direct API tests that need React as scaffolding.
+// Run: node --import ctg-react-test/jsx-loader tests/SelfTest.js
 
-import CTGTest from "ctg-js-test"; // Test framework
+import CTGTestConsoleFormatter from "ctg-js-test/formatter/console";
+import CTGTestResult from "ctg-js-test/result";
 
 // ── jsdom Setup ──────────────────────────────────────────────
 
@@ -31,35 +28,44 @@ global.cancelAnimationFrame = (id) => clearTimeout(id);
 
 // ── Pipeline Categories ──────────────────────────────────────
 
-import runErrorClass from "./pipelines/errorClass.js";
-import runCoreRegistry from "./pipelines/coreRegistry.js";
-import runMultiKey from "./pipelines/multiKey.js";
-import runNamespacing from "./pipelines/namespacing.js";
-import runMiddleware from "./pipelines/middleware.js";
-import runStrictMode from "./pipelines/strictMode.js";
-import runSnapshots from "./pipelines/snapshots.js";
-import runReactIntegration from "./pipelines/reactIntegration.js";
+import runErrorHandling from "./pipelines/errorHandling.jsx";
+import runStateCRUD from "./pipelines/stateCRUD.jsx";
+import runMultiKeyAndDerivation from "./pipelines/multiKeyAndDerivation.jsx";
+import runNamespacing from "./pipelines/namespacing.jsx";
+import runMiddleware from "./pipelines/middleware.jsx";
+import runStrictMode from "./pipelines/strictMode.jsx";
+import runSnapshots from "./pipelines/snapshots.jsx";
+import runReactIntegration from "./pipelines/reactIntegration.jsx";
 
 // ── Config ───────────────────────────────────────────────────
 
-const config = { output: "console", timeout: 0 };
+const config = { timeout: 0 };
+const collector = [];
+
+// ── Collect ─────────────────────────────────────────────────
+
+function collect(state) {
+    process.stdout.write(CTGTestConsoleFormatter.format(state) + "\n");
+    collector.push({ name: state.name, status: state.status });
+}
 
 // ── Run ──────────────────────────────────────────────────────
 
 process.stdout.write("=== ctg-react-state Self Test ===\n\n");
 
-await runErrorClass({ config });
-await runCoreRegistry({ config });
-await runMultiKey({ config });
-await runNamespacing({ config });
-await runMiddleware({ config });
-await runStrictMode({ config });
-await runSnapshots({ config });
-await runReactIntegration({ config });
+await runErrorHandling({ config, collect });
+await runStateCRUD({ config, collect });
+await runMultiKeyAndDerivation({ config, collect });
+await runNamespacing({ config, collect });
+await runMiddleware({ config, collect });
+await runStrictMode({ config, collect });
+await runSnapshots({ config, collect });
+await runReactIntegration({ config, collect });
 
 // ── Summary + Exit ───────────────────────────────────────────
 
 process.stdout.write("\n=== All tests complete ===\n");
 
-const failed = CTGTest._results.some((r) => r.status === "fail" || r.status === "error");
+const S = CTGTestResult.STATUS;
+const failed = collector.some((r) => r.status === S.FAIL || r.status === S.ERROR);
 process.exit(failed ? 1 : 0);

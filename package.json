@@ -7,7 +7,7 @@
         ".": "./src/index.js"
     },
     "scripts": {
-        "test": "node tests/SelfTest.js"
+        "test": "node --import ctg-react-test/jsx-loader tests/SelfTest.js"
     },
     "peerDependencies": {
         "react": ">=18.0.0"
