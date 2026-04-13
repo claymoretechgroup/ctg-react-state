@@ -2,9 +2,11 @@
 
 import React from "react";
 import CTGReactTest from "ctg-react-test";
+import CTGTestPredicates from "ctg-js-test/predicates";
 import { CTGReactStateProvider, useDistroState } from "../../src/CTGReactStateProvider.js";
 import { Counter, Display, Writer, Probe } from "../components.jsx";
 
+const P = CTGTestPredicates;
 let render, screen, act, cleanup;
 
 export default async function run({ config, collect }) {
@@ -65,7 +67,7 @@ export default async function run({ config, collect }) {
     // ── Export ───────────────────────────────────────────────
 
     collect(await CTGReactTest.init("export: returns state snapshot through component")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ a: 1, b: 2 }}>
@@ -74,19 +76,18 @@ export default async function run({ config, collect }) {
             );
             try {
                 const exported = stateRef.export();
-                state.subject = { keys: Object.keys(exported).sort(), a: exported.a, b: exported.b };
-                return state;
+                return { keys: Object.keys(exported).sort(), a: exported.a, b: exported.b };
             } finally { cleanup(); }
         })
-        .assert("has keys", (state) => JSON.stringify(state.subject.keys), JSON.stringify(["a", "b"]))
-        .assert("a value", (state) => state.subject.a, 1)
-        .assert("b value", (state) => state.subject.b, 2)
+        .assert("has keys", (state) => JSON.stringify(state.subject.keys), P.equals(JSON.stringify(["a", "b"])))
+        .assert("a value", (state) => state.subject.a, P.equals(1))
+        .assert("b value", (state) => state.subject.b, P.equals(2))
         .start(null, config));
 
     // ── Import ──────────────────────────────────────────────
 
     collect(await CTGReactTest.init("import: updates state observable by component")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ count: 0 }}>
@@ -98,18 +99,17 @@ export default async function run({ config, collect }) {
                 const before = screen.getByTestId("count-value").textContent;
                 await act(async () => { await stateRef.import({ count: 42 }); });
                 const after = screen.getByTestId("count-value").textContent;
-                state.subject = { before, after };
-                return state;
+                return { before, after };
             } finally { cleanup(); }
         })
-        .assert("before", (state) => state.subject.before, "0")
-        .assert("after", (state) => state.subject.after, "42")
+        .assert("before", (state) => state.subject.before, P.equals("0"))
+        .assert("after", (state) => state.subject.after, P.equals("42"))
         .start(null, config));
 
     // ── Import Rollback ─────────────────────────────────────
 
     collect(await CTGReactTest.init("import: rolls back on middleware failure")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ x: 1 }}>
@@ -125,10 +125,9 @@ export default async function run({ config, collect }) {
                 try {
                     await act(async () => { await stateRef.import({ x: 99, y: 2 }); });
                 } catch {}
-                state.subject = stateRef.get("x");
-                return state;
+                return stateRef.get("x");
             } finally { cleanup(); }
         })
-        .assert("x rolled back", (state) => state.subject, 1)
+        .assert("x rolled back", (state) => state.subject, P.equals(1))
         .start(null, config));
 }

@@ -2,10 +2,12 @@
 
 import React from "react";
 import CTGReactTest from "ctg-react-test";
+import CTGTestPredicates from "ctg-js-test/predicates";
 import CTGReactStateSnapshot from "../../src/CTGReactStateSnapshot.js";
 import { CTGReactStateProvider } from "../../src/CTGReactStateProvider.js";
 import { Counter, Display, Probe } from "../components.jsx";
 
+const P = CTGTestPredicates;
 let render, screen, act, cleanup;
 
 export default async function run({ config, collect }) {
@@ -13,7 +15,7 @@ export default async function run({ config, collect }) {
     render = rtl.render; screen = rtl.screen; act = rtl.act; cleanup = rtl.cleanup;
 
     collect(await CTGReactTest.init("snapshot: save and restore through component")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ count: 0 }}>
@@ -28,16 +30,15 @@ export default async function run({ config, collect }) {
                 const afterSet = screen.getByTestId("count-value").textContent;
                 await act(async () => { await snap.restore("initial"); });
                 const afterRestore = screen.getByTestId("count-value").textContent;
-                state.subject = { afterSet, afterRestore };
-                return state;
+                return { afterSet, afterRestore };
             } finally { cleanup(); }
         })
-        .assert("after set", (state) => state.subject.afterSet, "42")
-        .assert("after restore", (state) => state.subject.afterRestore, "0")
+        .assert("after set", (state) => state.subject.afterSet, P.equals("42"))
+        .assert("after restore", (state) => state.subject.afterRestore, P.equals("0"))
         .start(null, config));
 
     collect(await CTGReactTest.init("snapshot: back/forward navigates state")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ count: 0 }}>
@@ -58,17 +59,16 @@ export default async function run({ config, collect }) {
                 const atS0 = stateRef.get("count");
                 await act(async () => { await snap.forward(); });
                 const backToS1 = stateRef.get("count");
-                state.subject = { atS1, atS0, backToS1 };
-                return state;
+                return { atS1, atS0, backToS1 };
             } finally { cleanup(); }
         })
-        .assert("back to s1", (state) => state.subject.atS1, 10)
-        .assert("back to s0", (state) => state.subject.atS0, 0)
-        .assert("forward to s1", (state) => state.subject.backToS1, 10)
+        .assert("back to s1", (state) => state.subject.atS1, P.equals(10))
+        .assert("back to s0", (state) => state.subject.atS0, P.equals(0))
+        .assert("forward to s1", (state) => state.subject.backToS1, P.equals(10))
         .start(null, config));
 
     collect(await CTGReactTest.init("snapshot: auto captures on every set")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ count: 0 }}>
@@ -84,16 +84,15 @@ export default async function run({ config, collect }) {
                 const list = await snap.list();
                 await act(async () => { await snap.back(); });
                 const backOne = stateRef.get("count");
-                state.subject = { snapCount: list.length, backOne };
-                return state;
+                return { snapCount: list.length, backOne };
             } finally { cleanup(); }
         })
-        .assert("3 auto-snapshots", (state) => state.subject.snapCount, 3)
-        .assert("time-travel works", (state) => state.subject.backOne, 1)
+        .assert("3 auto-snapshots", (state) => state.subject.snapCount, P.equals(3))
+        .assert("time-travel works", (state) => state.subject.backOne, P.equals(1))
         .start(null, config));
 
     collect(await CTGReactTest.init("snapshot: clear removes all snapshots")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ count: 0 }}>
@@ -106,16 +105,15 @@ export default async function run({ config, collect }) {
                 await snap.save("b");
                 snap.clear();
                 const list = await snap.list();
-                state.subject = { count: list.length, cursor: snap.current() };
-                return state;
+                return { count: list.length, cursor: snap.current() };
             } finally { cleanup(); }
         })
-        .assert("empty", (state) => state.subject.count, 0)
-        .assert("cursor reset", (state) => state.subject.cursor, null)
+        .assert("empty", (state) => state.subject.count, P.equals(0))
+        .assert("cursor reset", (state) => state.subject.cursor, P.equals(null))
         .start(null, config));
 
     collect(await CTGReactTest.init("snapshot: maxHistory trims oldest")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ count: 0 }}>
@@ -129,11 +127,10 @@ export default async function run({ config, collect }) {
                 await snap.save("c");
                 await snap.save("d");
                 const list = await snap.list();
-                state.subject = { count: list.length, hasA: list.includes("a") };
-                return state;
+                return { count: list.length, hasA: list.includes("a") };
             } finally { cleanup(); }
         })
-        .assert("3 snapshots", (state) => state.subject.count, 3)
-        .assert("oldest trimmed", (state) => state.subject.hasA, false)
+        .assert("3 snapshots", (state) => state.subject.count, P.equals(3))
+        .assert("oldest trimmed", (state) => state.subject.hasA, P.equals(false))
         .start(null, config));
 }

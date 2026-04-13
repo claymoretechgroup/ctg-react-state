@@ -2,10 +2,12 @@
 
 import React from "react";
 import CTGReactTest from "ctg-react-test";
+import CTGTestPredicates from "ctg-js-test/predicates";
 import CTGReactState from "../../src/CTGReactState.js";
 import { CTGReactStateProvider } from "../../src/CTGReactStateProvider.js";
 import { Counter, Display, ErrorDisplay, MutateButton, Probe } from "../components.jsx";
 
+const P = CTGTestPredicates;
 let render, screen, act, cleanup;
 
 export default async function run({ config, collect }) {
@@ -25,7 +27,7 @@ export default async function run({ config, collect }) {
             config));
 
     collect(await CTGReactTest.init("strict: mutate works with named mutator")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             const instance = CTGReactState.init({ count: 0 }, {}, { strict: true });
             instance.mutator("increment", (shared) => ({ count: shared.count + 1 }));
@@ -38,15 +40,14 @@ export default async function run({ config, collect }) {
             try {
                 stateRef.mutator("increment", (shared) => ({ count: shared.count + 1 }));
                 await act(async () => { await stateRef.mutate("increment"); });
-                state.subject = screen.getByTestId("count-value").textContent;
-                return state;
+                return screen.getByTestId("count-value").textContent;
             } finally { cleanup(); }
         })
-        .assert("count incremented", (state) => state.subject, "1")
+        .assert("count incremented", (state) => state.subject, P.equals("1"))
         .start(null, config));
 
     collect(await CTGReactTest.init("strict: mutate with payload")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ count: 0 }} config={{ strict: true }}>
@@ -57,11 +58,10 @@ export default async function run({ config, collect }) {
             try {
                 stateRef.mutator("setTo", (shared, val) => ({ count: val }));
                 await act(async () => { await stateRef.mutate("setTo", 5); });
-                state.subject = screen.getByTestId("count-value").textContent;
-                return state;
+                return screen.getByTestId("count-value").textContent;
             } finally { cleanup(); }
         })
-        .assert("count is 5", (state) => state.subject, "5")
+        .assert("count is 5", (state) => state.subject, P.equals("5"))
         .start(null, config));
 
     collect(await CTGReactTest.init("strict: unknown mutator throws")

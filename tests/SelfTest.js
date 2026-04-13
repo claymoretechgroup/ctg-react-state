@@ -46,7 +46,7 @@ const collector = [];
 
 function collect(state) {
     process.stdout.write(CTGTestConsoleFormatter.format(state) + "\n");
-    collector.push({ name: state.name, status: state.status });
+    collector.push({ label: state.label, status: state.status });
 }
 
 // ── Run ──────────────────────────────────────────────────────

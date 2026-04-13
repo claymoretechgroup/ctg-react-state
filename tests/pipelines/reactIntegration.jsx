@@ -6,6 +6,7 @@
 
 import React from "react";
 import CTGTest from "ctg-js-test";
+import CTGTestPredicates from "ctg-js-test/predicates";
 import CTGReactTest from "ctg-react-test";
 import CTGReactState from "../../src/CTGReactState.js";
 import { CTGReactStateProvider, useDistroState, useDistroStateRegistry } from "../../src/CTGReactStateProvider.js";
@@ -118,7 +119,7 @@ export default async function run({ config, collect }) {
     // but the trigger must bypass user interaction to isolate the registry path.
 
     collect(await CTGTest.init("cross-component: set in one updates registered observer")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             function Probe() { stateRef = useDistroState(); return null; }
             render(
@@ -131,12 +132,11 @@ export default async function run({ config, collect }) {
                 const before = screen.getByTestId("shared-value").textContent;
                 await act(async () => { await stateRef.set("shared", 42); });
                 const after = screen.getByTestId("shared-value").textContent;
-                state.subject = { before, after };
-                return state;
+                return { before, after };
             } finally { cleanup(); }
         })
-        .assert("before", (state) => state.subject.before, "0")
-        .assert("after", (state) => state.subject.after, "42")
+        .assert("before", (state) => state.subject.before, CTGTestPredicates.equals("0"))
+        .assert("after", (state) => state.subject.after, CTGTestPredicates.equals("42"))
         .start(null, config));
 
     // ── MultiKeyDisplay Component ────────────────────────────
@@ -187,7 +187,7 @@ export default async function run({ config, collect }) {
     // ══════════════════════════════════════════════════════════════
 
     collect(await CTGTest.init("cross-component: unregistered reader sees value via get()")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             function Probe() { stateRef = useDistroState(); return null; }
             render(
@@ -198,15 +198,14 @@ export default async function run({ config, collect }) {
             );
             try {
                 await act(async () => { await stateRef.set("data", "world"); });
-                state.subject = stateRef.get("data");
-                return state;
+                return stateRef.get("data");
             } finally { cleanup(); }
         })
-        .assert("get returns updated value", (state) => state.subject, "world")
+        .assert("get returns updated value", (state) => state.subject, CTGTestPredicates.equals("world"))
         .start(null, config));
 
     collect(await CTGTest.init("useDistroStateRegistry: unregisters on unmount")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             function Probe() { stateRef = useDistroState(); return null; }
             function App({ show }) {
@@ -223,16 +222,15 @@ export default async function run({ config, collect }) {
                 rerenderApp(<App show={false} />);
                 await act(async () => { await stateRef.set("temp", 99); });
                 const after = stateRef.get("temp");
-                state.subject = { during, after };
-                return state;
+                return { during, after };
             } finally { cleanup(); }
         })
-        .assert("value during mount", (state) => state.subject.during, 5)
-        .assert("value persists in shared", (state) => state.subject.after, 99)
+        .assert("value during mount", (state) => state.subject.during, CTGTestPredicates.equals(5))
+        .assert("value persists in shared", (state) => state.subject.after, CTGTestPredicates.equals(99))
         .start(null, config));
 
     collect(await CTGTest.init("NamespaceDisplay: shows namespace values")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             function Probe() { stateRef = useDistroState(); return null; }
             render(
@@ -246,11 +244,10 @@ export default async function run({ config, collect }) {
                     await stateRef.set("ui.sidebar", true);
                     await stateRef.set("ui.theme", "dark");
                 });
-                state.subject = stateRef.getNamespace("ui");
-                return state;
+                return stateRef.getNamespace("ui");
             } finally { cleanup(); }
         })
-        .assert("sidebar", (state) => state.subject.sidebar, true)
-        .assert("theme", (state) => state.subject.theme, "dark")
+        .assert("sidebar", (state) => state.subject.sidebar, CTGTestPredicates.equals(true))
+        .assert("theme", (state) => state.subject.theme, CTGTestPredicates.equals("dark"))
         .start(null, config));
 }

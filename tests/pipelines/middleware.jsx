@@ -2,9 +2,11 @@
 
 import React from "react";
 import CTGReactTest from "ctg-react-test";
+import CTGTestPredicates from "ctg-js-test/predicates";
 import { CTGReactStateProvider } from "../../src/CTGReactStateProvider.js";
 import { Counter, Display, Probe } from "../components.jsx";
 
+const P = CTGTestPredicates;
 let render, screen, act, cleanup;
 
 export default async function run({ config, collect }) {
@@ -12,7 +14,7 @@ export default async function run({ config, collect }) {
     render = rtl.render; screen = rtl.screen; act = rtl.act; cleanup = rtl.cleanup;
 
     collect(await CTGReactTest.init("middleware: transforms value observable in component")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ count: 0 }}>
@@ -23,15 +25,14 @@ export default async function run({ config, collect }) {
             try {
                 stateRef.use((id, val) => val * 2);
                 await act(async () => { await stateRef.set("count", 5); });
-                state.subject = screen.getByTestId("count-value").textContent;
-                return state;
+                return screen.getByTestId("count-value").textContent;
             } finally { cleanup(); }
         })
-        .assert("doubled", (state) => state.subject, "10")
+        .assert("doubled", (state) => state.subject, P.equals("10"))
         .start(null, config));
 
     collect(await CTGReactTest.init("middleware: chained transforms")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ count: 0 }}>
@@ -43,15 +44,14 @@ export default async function run({ config, collect }) {
                 stateRef.use((id, val) => val + 10);
                 stateRef.use((id, val) => val * 2);
                 await act(async () => { await stateRef.set("count", 5); });
-                state.subject = screen.getByTestId("count-value").textContent;
-                return state;
+                return screen.getByTestId("count-value").textContent;
             } finally { cleanup(); }
         })
-        .assert("(5+10)*2 = 30", (state) => state.subject, "30")
+        .assert("(5+10)*2 = 30", (state) => state.subject, P.equals("30"))
         .start(null, config));
 
     collect(await CTGReactTest.init("middleware: rejection prevents write")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ count: 5 }}>
@@ -65,16 +65,15 @@ export default async function run({ config, collect }) {
                 try {
                     await act(async () => { await stateRef.set("count", 99); });
                 } catch { threw = true; }
-                state.subject = { value: stateRef.get("count"), threw };
-                return state;
+                return { value: stateRef.get("count"), threw };
             } finally { cleanup(); }
         })
-        .assert("value unchanged", (state) => state.subject.value, 5)
-        .assert("threw", (state) => state.subject.threw, true)
+        .assert("value unchanged", (state) => state.subject.value, P.equals(5))
+        .assert("threw", (state) => state.subject.threw, P.equals(true))
         .start(null, config));
 
     collect(await CTGReactTest.init("middleware: receives id, nextValue, prevValue")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             let captured = {};
             render(
@@ -88,12 +87,11 @@ export default async function run({ config, collect }) {
                     return next;
                 });
                 await act(async () => { await stateRef.set("count", 42); });
-                state.subject = captured;
-                return state;
+                return captured;
             } finally { cleanup(); }
         })
-        .assert("id", (state) => state.subject.id, "count")
-        .assert("next", (state) => state.subject.next, 42)
-        .assert("prev", (state) => state.subject.prev, 1)
+        .assert("id", (state) => state.subject.id, P.equals("count"))
+        .assert("next", (state) => state.subject.next, P.equals(42))
+        .assert("prev", (state) => state.subject.prev, P.equals(1))
         .start(null, config));
 }

@@ -2,9 +2,11 @@
 
 import React from "react";
 import CTGReactTest from "ctg-react-test";
+import CTGTestPredicates from "ctg-js-test/predicates";
 import { CTGReactStateProvider } from "../../src/CTGReactStateProvider.js";
 import { NamespaceDisplay, Display, Probe } from "../components.jsx";
 
+const P = CTGTestPredicates;
 let render, screen, act, cleanup;
 
 export default async function run({ config, collect }) {
@@ -12,7 +14,7 @@ export default async function run({ config, collect }) {
     render = rtl.render; screen = rtl.screen; act = rtl.act; cleanup = rtl.cleanup;
 
     collect(await CTGReactTest.init("namespace: displays namespace values")
-        .stage("setup", async (state) => {
+        .stage("setup", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{}}>
@@ -25,16 +27,15 @@ export default async function run({ config, collect }) {
                     await stateRef.set("ui.sidebar", true);
                     await stateRef.set("ui.theme", "dark");
                 });
-                state.subject = stateRef.getNamespace("ui");
-                return state;
+                return stateRef.getNamespace("ui");
             } finally { cleanup(); }
         })
-        .assert("sidebar", (state) => state.subject.sidebar, true)
-        .assert("theme", (state) => state.subject.theme, "dark")
+        .assert("sidebar", (state) => state.subject.sidebar, P.equals(true))
+        .assert("theme", (state) => state.subject.theme, P.equals("dark"))
         .start(null, config));
 
     collect(await CTGReactTest.init("namespace: setNamespace writes prefixed keys")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{}}>
@@ -46,16 +47,15 @@ export default async function run({ config, collect }) {
                 await act(async () => {
                     await stateRef.setNamespace("ui", { open: true, width: 300 });
                 });
-                state.subject = { open: stateRef.get("ui.open"), width: stateRef.get("ui.width") };
-                return state;
+                return { open: stateRef.get("ui.open"), width: stateRef.get("ui.width") };
             } finally { cleanup(); }
         })
-        .assert("open", (state) => state.subject.open, true)
-        .assert("width", (state) => state.subject.width, 300)
+        .assert("open", (state) => state.subject.open, P.equals(true))
+        .assert("width", (state) => state.subject.width, P.equals(300))
         .start(null, config));
 
     collect(await CTGReactTest.init("namespace: empty namespace returns empty object")
-        .stage("execute", async (state) => {
+        .stage("execute", async () => {
             let stateRef = null;
             render(
                 <CTGReactStateProvider state={{ other: 1 }}>
@@ -63,10 +63,9 @@ export default async function run({ config, collect }) {
                 </CTGReactStateProvider>
             );
             try {
-                state.subject = Object.keys(stateRef.getNamespace("empty")).length;
-                return state;
+                return Object.keys(stateRef.getNamespace("empty")).length;
             } finally { cleanup(); }
         })
-        .assert("empty", (state) => state.subject, 0)
+        .assert("empty", (state) => state.subject, P.equals(0))
         .start(null, config));
 }
