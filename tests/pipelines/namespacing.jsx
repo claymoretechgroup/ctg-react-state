@@ -1,8 +1,7 @@
 // Namespacing tests through components
 
 import React from "react";
-import CTGReactTest from "ctg-react-test";
-import CTGTestPredicates from "ctg-js-test/predicates";
+import CTGReactTest, { CTGTestPredicates } from "ctg-react-test";
 import { CTGReactStateProvider } from "../../src/CTGReactStateProvider.js";
 import { NamespaceDisplay, Display, Probe } from "../components.jsx";
 

@@ -2,6 +2,12 @@
 
 React context provider and hooks for wiring components into the CTGReactState registry.
 
+Import from the package root:
+
+```javascript
+import { CTGReactStateProvider, useDistroState, useDistroStateRegistry } from "ctg-react-state";
+```
+
 ---
 
 ### CTGReactStateProvider :: { state?, children, config? } -> JSX

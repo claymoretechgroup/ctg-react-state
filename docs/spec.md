@@ -8,12 +8,13 @@
 
 ## Requirements Doc Divergences
 
-### JavaScript, Not TypeScript
+### JavaScript Implementation With TypeScript Declarations
 
 **Requirements doc says:** ES2020+, with TypeScript-style signatures in examples.
 
-**This spec says:** Plain JavaScript with ESM, consistent with all CTG JS projects.
-Type contracts are documented via HM-style signatures in comments. No build step.
+**This spec says:** Runtime implementation remains plain JavaScript with ESM.
+Type contracts are documented via HM-style signatures in comments and shipped
+as `.d.ts` declaration files for TypeScript consumers. No build step.
 
 ### Single Package, Not Monorepo
 
@@ -26,17 +27,17 @@ the React integration — the core class is usable standalone without React.
 
 ### Open Questions Resolved
 
-1. **Computed state caching:** Not in v1.0.0. Derivations are computed on read.
+1. **Computed state caching:** Not in 2.0.0. Derivations are computed on read.
    Memoization is a future optimization if profiling shows it's needed.
-2. **Selector optimization:** Not in v1.0.0. Components re-render when any
+2. **Selector optimization:** Not in 2.0.0. Components re-render when any
    registered key changes. `useSelector`-style optimization is a future enhancement.
 3. **DevTools:** Deferred. The snapshot/export data model supports it.
 4. **SSR:** `export()`/`import()` provides the serialization mechanism. The provider
-   accepts initial state via props for hydration. No special SSR API in v1.0.0.
+   accepts initial state via props for hydration. No special SSR API in 2.0.0.
 5. **React Server Components:** Out of scope. The registry is inherently client-side.
 6. **Testing:** Use `ctg-react-test` for React integration tests, standalone
    `ctg-js-test` for core class tests.
-7. **Re-registration optimization:** v1.0.0 uses a ref for the current value and
+7. **Re-registration optimization:** The implementation uses a ref for the current value and
    registers only on mount. The effect dependency is the `id`, not the value.
    This prevents unnecessary re-registration on every state change.
 8. **Persistence adapters:** Not built-in. The pluggable storage backend on
@@ -62,7 +63,8 @@ ctg-react-state/
 │   ├── CTGReactStateError.js         # Typed error class
 │   ├── CTGReactStateSnapshot.js      # Snapshot and time-travel
 │   ├── CTGReactStateProvider.js      # React context provider + hooks
-│   └── index.js                      # Package entry point
+│   ├── index.js                      # Package entry point
+│   └── types/                        # TypeScript declarations for package exports
 ├── tests/
 │   └── SelfTest.js                   # Self-tests (ctg-js-test pipelines)
 ├── docs/
@@ -76,11 +78,15 @@ ctg-react-state/
 ```json
 {
     "name": "ctg-react-state",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "type": "module",
     "exports": {
-        ".": "./src/index.js"
+        ".": {
+            "types": "./src/types/index.d.ts",
+            "default": "./src/index.js"
+        }
     },
+    "types": "./src/types/index.d.ts",
     "peerDependencies": {
         "react": ">=18.0.0"
     },
@@ -91,6 +97,8 @@ ctg-react-state/
 ```
 
 - **`"type": "module"`** — all `.js` files are ESM
+- **`"exports"`** — one root entry point; default export is `CTGReactState`, named exports are `CTGReactState`, `CTGReactStateError`, `CTGReactStateSnapshot`, `CTGReactStateProvider`, `useDistroState`, and `useDistroStateRegistry`
+- **`"types"`** — TypeScript declarations for the root export, public classes, provider props, hooks, config, middleware, mutators, snapshots, and error lookup shapes
 - **React is an optional peer dep** — core and snapshot classes work without React
 - **No runtime dependencies**
 
@@ -582,7 +590,7 @@ naturally scope to whichever provider is nearest in the React tree — no explic
 scope identifier is needed.
 
 NOTE: The requirements doc mentions an optional scope identifier for reaching
-parent providers from nested scopes. This is deferred from v1.0.0 because
+parent providers from nested scopes. This is deferred from 2.0.0 because
 React's context system already provides natural scoping, and cross-scope access
 adds complexity. If needed, components can receive the parent provider's instance
 via props or a separate context.

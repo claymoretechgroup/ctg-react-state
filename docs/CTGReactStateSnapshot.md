@@ -2,6 +2,12 @@
 
 Snapshot storage and time-travel for CTGReactState. Loosely coupled via `export()`/`import()` interface.
 
+Import from the package root:
+
+```javascript
+import { CTGReactState, CTGReactStateSnapshot } from "ctg-react-state";
+```
+
 ### Properties
 
 | Property | Type | Description |

@@ -1,8 +1,7 @@
 // State CRUD tests — register, get, set, unregister, export, import through components
 
 import React from "react";
-import CTGReactTest from "ctg-react-test";
-import CTGTestPredicates from "ctg-js-test/predicates";
+import CTGReactTest, { CTGTestPredicates } from "ctg-react-test";
 import { CTGReactStateProvider, useDistroState } from "../../src/CTGReactStateProvider.js";
 import { Counter, Display, Writer, Probe } from "../components.jsx";
 

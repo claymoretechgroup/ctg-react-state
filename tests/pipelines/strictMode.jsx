@@ -1,8 +1,7 @@
 // Strict mode tests through components
 
 import React from "react";
-import CTGReactTest from "ctg-react-test";
-import CTGTestPredicates from "ctg-js-test/predicates";
+import CTGReactTest, { CTGTestPredicates } from "ctg-react-test";
 import CTGReactState from "../../src/CTGReactState.js";
 import { CTGReactStateProvider } from "../../src/CTGReactStateProvider.js";
 import { Counter, Display, ErrorDisplay, MutateButton, Probe } from "../components.jsx";

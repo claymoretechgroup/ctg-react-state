@@ -1,12 +1,14 @@
 // Self-tests for ctg-react-state
 //
-// All tests run through React components via CTGReactTest v3.
+// All tests run through React components via CTGReactTest.
 // Sets up jsdom globally for DOM environment.
 //
 // Run: node --import ctg-react-test/jsx-loader tests/SelfTest.js
 
-import CTGTestConsoleFormatter from "ctg-js-test/formatter/console";
-import CTGTestResult from "ctg-js-test/result";
+import {
+    CTGTestConsoleFormatter,
+    CTGTestResult
+} from "ctg-react-test";
 
 // ── jsdom Setup ──────────────────────────────────────────────
 
@@ -28,6 +30,7 @@ global.cancelAnimationFrame = (id) => clearTimeout(id);
 
 // ── Pipeline Categories ──────────────────────────────────────
 
+import runExports from "./pipelines/exports.jsx";
 import runErrorHandling from "./pipelines/errorHandling.jsx";
 import runStateCRUD from "./pipelines/stateCRUD.jsx";
 import runMultiKeyAndDerivation from "./pipelines/multiKeyAndDerivation.jsx";
@@ -53,6 +56,7 @@ function collect(state) {
 
 process.stdout.write("=== ctg-react-state Self Test ===\n\n");
 
+await runExports({ config, collect });
 await runErrorHandling({ config, collect });
 await runStateCRUD({ config, collect });
 await runMultiKeyAndDerivation({ config, collect });

@@ -1,27 +1,41 @@
 {
     "name": "ctg-react-state",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "Lightweight distributed state management for React built on useState reactivity",
     "type": "module",
     "exports": {
-        ".": "./src/index.js"
+        ".": {
+            "types": "./src/types/index.d.ts",
+            "default": "./src/index.js"
+        }
     },
     "scripts": {
-        "test": "node --import ctg-react-test/jsx-loader tests/SelfTest.js"
+        "test": "node --import ctg-react-test/jsx-loader tests/SelfTest.js",
+        "check:types": "tsc -p tsconfig.types.json --noEmit"
     },
     "peerDependencies": {
         "react": ">=18.0.0"
     },
     "peerDependenciesMeta": {
-        "react": { "optional": true }
+        "react": {
+            "optional": true
+        }
     },
     "devDependencies": {
-        "ctg-js-test": "github:claymoretechgroup/ctg-js-test",
-        "ctg-react-test": "github:claymoretechgroup/ctg-react-test",
+        "@testing-library/react": "^14.0.0",
+        "@testing-library/user-event": "^14.0.0",
+        "@types/react": "^18.3.31",
+        "ctg-js-test": "github:claymoretechgroup/ctg-js-test#v4.0.0",
+        "ctg-react-test": "github:claymoretechgroup/ctg-react-test#v4.0.0",
         "jsdom": "^24.0.0",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",
-        "@testing-library/react": "^14.0.0",
-        "@testing-library/user-event": "^14.0.0"
-    }
+        "typescript": "^5.9.3"
+    },
+    "overrides": {
+        "form-data": "4.0.6",
+        "react-test-renderer": "18.3.1",
+        "ws": "8.21.3"
+    },
+    "types": "./src/types/index.d.ts"
 }

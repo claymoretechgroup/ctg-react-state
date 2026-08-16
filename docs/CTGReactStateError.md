@@ -2,6 +2,12 @@
 
 Typed error class with bidirectional name/code lookup.
 
+Import from the package root:
+
+```javascript
+import { CTGReactStateError } from "ctg-react-state";
+```
+
 ### Error Codes
 
 | Code | Type | Description |

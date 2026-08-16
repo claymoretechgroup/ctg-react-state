@@ -1,13 +1,11 @@
 // React integration tests — provider, hooks, component state communication
 // Requires jsdom globals to be set up before import
 //
-// DOM-observable behavior uses CTGReactTest v3 (start with JSX, interact,
+// DOM-observable behavior uses CTGReactTest (start with JSX, interact,
 // assertComponent). Direct API tests that need React scaffolding use CTGTest.
 
 import React from "react";
-import CTGTest from "ctg-js-test";
-import CTGTestPredicates from "ctg-js-test/predicates";
-import CTGReactTest from "ctg-react-test";
+import CTGReactTest, { CTGTest, CTGTestPredicates } from "ctg-react-test";
 import CTGReactState from "../../src/CTGReactState.js";
 import { CTGReactStateProvider, useDistroState, useDistroStateRegistry } from "../../src/CTGReactStateProvider.js";
 import { Counter, Display, Writer, MultiKeyDisplay, NamespaceDisplay, Toggle } from "../components.jsx";

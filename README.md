@@ -11,6 +11,7 @@
 * **Snapshots & time-travel**: Save/restore state, navigate with `back()`/`forward()`
 * **Strict mode**: Opt-in enforced mutation patterns via named mutators
 * **Zero dependencies**: Only React's `useState` hook
+* **TypeScript declarations**: Public exports include `.d.ts` files for the registry, errors, snapshots, provider, hooks, and config shapes
 
 ## Install
 
@@ -19,6 +20,8 @@ npm install github:claymoretechgroup/ctg-react-state
 ```
 
 Peer dependency: `react >= 18.0.0` (optional — core works standalone).
+
+Version 2.0.0 exposes the public API from the package root with TypeScript declarations. The default export is `CTGReactState`; named exports include `CTGReactState`, `CTGReactStateError`, `CTGReactStateSnapshot`, `CTGReactStateProvider`, `useDistroState`, and `useDistroStateRegistry`.
 
 ## Examples
 
@@ -135,4 +138,4 @@ state.get("theme"); // "dark"
 
 ## Notice
 
-`ctg-react-state` is under active development. The core API is stable. Selector optimization, computed caching, and DevTools are planned for future versions.
+`ctg-react-state` is under active development. The core API is stable. TypeScript declarations were added in 2.0.0. Selector optimization, computed caching, and DevTools are planned for future versions.

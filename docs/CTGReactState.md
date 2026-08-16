@@ -2,6 +2,12 @@
 
 Core state registry. Manages a flat `shared` object of values keyed by ID and bound setter functions. Usable standalone without React.
 
+Import from the package root:
+
+```javascript
+import CTGReactState, { CTGReactStateError } from "ctg-react-state";
+```
+
 ### Properties
 
 | Property | Type | Description |
